@@ -1,0 +1,100 @@
+﻿<h3>GamesList</h3>
+@rendermode RenderMode.InteractiveServer
+@inject IStateManager StateManager
+
+<h2>Available Games</h2>
+<input type="text" style="color" @bind="search" placeholder="Search..." @oninput="OnSearchChanged" />
+<div class="game-filters">
+    <label>
+        <input type="checkbox" value="@showOnlyPlayed" @onchange="OnCheckBoxChanged" />
+        Show Only Played
+    </label>
+    <label>
+        <input type="radio" name="sorttype" value="@sortByLastPlayed" @onchange="OnFSortChanged" />
+        Sort By Last Played
+    </label>
+    <label>
+        <input type="radio" name="sorttype" value="@sortByPlayTime" @onchange="OnSSortChanged" />
+        Sort By Play Time
+    </label>
+    <label>
+        <input type="radio" name="sorttype" value="@sortByName" checked="checked" @onchange="OnTSortChanged" />
+        Sort By Name
+    </label>
+</div>
+
+<div class="available-games">
+    @foreach (var game in StateManager.FiltredGames)
+    {
+        @if (!string.IsNullOrEmpty(game.img_icon_url))
+        {
+            <Draggable Data="@game">
+                <img class="game-item" src="@game.GetImageUrl()" alt="@game.name" />
+            </Draggable>
+        }
+    }
+</div>
+
+@code {
+    private string search;
+    private int playedMoreThan;
+    private bool showOnlyPlayed;
+    private bool sortByLastPlayed;
+    private bool sortByPlayTime;
+    private bool sortByName;
+
+    protected override void OnInitialized()
+    {
+        StateManager.FilterResult();
+        search = string.Empty;
+        playedMoreThan = 0;
+        showOnlyPlayed = false;
+        sortByLastPlayed = false;
+        sortByPlayTime = false;
+        sortByName = true;
+    }
+
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        search = e.Value.ToString();
+        StateManager.SaveFilterState(search, playedMoreThan, showOnlyPlayed, sortByLastPlayed, sortByPlayTime, sortByName);
+        StateManager.FilterResult();
+    }
+
+    private void OnCheckBoxChanged()
+    {
+        showOnlyPlayed = !showOnlyPlayed;
+        OnFilterChanged();
+    }
+
+    private void OnFSortChanged()
+    {
+        sortByLastPlayed = true;
+        sortByPlayTime = false;
+        sortByName = false;
+        OnFilterChanged();
+    }
+
+    private void OnSSortChanged()
+    {
+        sortByLastPlayed = false;
+        sortByPlayTime = true;
+        sortByName = false;
+        OnFilterChanged();
+    }
+
+    private void OnTSortChanged()
+    {
+        sortByLastPlayed = false;
+        sortByPlayTime = false;
+        sortByName = true;
+        OnFilterChanged();
+    }
+
+    private void OnFilterChanged()
+    {
+        StateManager.SaveFilterState(search, playedMoreThan, showOnlyPlayed, sortByLastPlayed, sortByPlayTime, sortByName);
+        StateManager.FilterResult();
+    }
+}

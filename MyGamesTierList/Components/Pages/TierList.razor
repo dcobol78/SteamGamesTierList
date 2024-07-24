@@ -1,0 +1,19 @@
+﻿@page "/TierList"
+@inject IStateManager StateManager
+
+<h1>My Games Tier List</h1>
+
+<div class="tier-list">
+    @for (int i = 0; i < StateManager.Tiers.Count; i++)
+    {
+        <MyGamesTierList.Components.TierList.TierListBox TierPosition="@i"/>
+    }
+</div>
+
+<div class="game-list">
+    <MyGamesTierList.Components.TierList.GamesTierList />
+</div>
+
+@code {
+
+}

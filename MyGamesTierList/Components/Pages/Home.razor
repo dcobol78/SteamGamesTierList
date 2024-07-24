@@ -1,0 +1,31 @@
+﻿@page "/"
+@rendermode RenderMode.InteractiveServer
+
+
+@inject HttpClient httpClient
+@inject IStateManager StateManager
+@inject NavigationManager NavigationManager
+    
+<input type="tel" @bind-value="SteamId"/>
+<button type="submit" @onclick="SubmitSteamId">Submit</button>
+<p>@SteamId</p>
+
+@code {
+    public string SteamApiKey = "F3222DCD3C449B826C6A2805C982CEB7"; // Научиться работать с ключами API
+    public string SteamId = "76561198188611981";
+
+    public async Task SubmitSteamId()
+    {
+        var response = await httpClient.GetAsync($"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={SteamApiKey}&steamid={SteamId}&format=json&include_appinfo=true");
+        var contents = await response.Content.ReadAsStringAsync();
+        if (!string.IsNullOrEmpty(contents))
+        {
+            StateManager.SetGames(contents);
+            NavigationManager.NavigateTo("TierList");
+        }
+        else
+        {
+
+        }
+    }
+}

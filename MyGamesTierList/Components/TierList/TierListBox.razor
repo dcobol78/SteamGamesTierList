@@ -1,0 +1,39 @@
+﻿@inject IStateManager StateManager
+@rendermode RenderMode.InteractiveServer
+
+<DropTarget Drop="@OnDrop">
+    <div class="tier-box">
+        <div class="tier-name" style="background-color:@tier.BackgroundColor">
+            @tier.Name
+        </div>
+            <div class="tier-games">
+            @foreach (var game in tier.Games)
+                {
+                    <div class="game-item">
+                        <img src="@game.GetImageUrl()" alt="@game.name" />
+                    </div>
+                }
+            </div>
+    </div>
+</DropTarget>
+
+@code {
+    [Parameter]
+    public int TierPosition { get; set; }
+
+    private Tier tier { get; set; }
+
+    protected override void OnInitialized()
+    {
+        tier = StateManager.Tiers[TierPosition];
+    }
+
+    void OnDrop(Game game)
+    {
+        StateManager.AddGameToTier(game, tier, 0);
+
+        // Important: Invoke StateHasChanged() to update the page
+        StateHasChanged();
+        
+    }
+}
