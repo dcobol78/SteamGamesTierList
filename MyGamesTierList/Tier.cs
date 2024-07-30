@@ -20,11 +20,21 @@ namespace MyGamesTierList
 
         public string Name { get; set; }
 
+        public Action TierRefreshDelegate { get; set; }
+
         public string BackgroundColor { get; set; }
 
         public int Position { get; set; }
 
         public List<Game> Games { get; set; }
+
+        public void RefreshTear()
+        {
+            if (TierRefreshDelegate != null)
+            {
+                TierRefreshDelegate.Invoke();
+            }
+        }
     }
 
 

@@ -1,0 +1,20 @@
+﻿@rendermode RenderMode.InteractiveServer
+@inject IStateManager StateManager
+@inject DragAndDropService dragAndDropService
+
+<img title="@game.name" class="game-item" src="@game.GetImageUrl()" alt="@game.name" />
+
+@code {
+    [Parameter]
+    public int TierPosition { get; set; }
+
+    [Parameter]
+    public Game game { get; set; }
+
+    private Tier tier { get; set; }
+
+    protected override void OnInitialized()
+    {
+        tier = StateManager.Tiers[TierPosition];
+    }
+}

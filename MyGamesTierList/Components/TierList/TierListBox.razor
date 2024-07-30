@@ -1,7 +1,8 @@
 ﻿@inject IStateManager StateManager
+@inject DragAndDropService dragAndDropService
 @rendermode RenderMode.InteractiveServer
 
-<DropTarget Drop="@OnDrop">
+<DropTarget Drop="@OnDrop" DragEnter="@OnDragEnter">
     <div class="tier-box">
         <div class="tier-name" style="background-color:@tier.BackgroundColor">
             @tier.Name
@@ -9,9 +10,9 @@
             <div class="tier-games">
             @foreach (var game in tier.Games)
                 {
-                    <div class="game-item">
-                        <img src="@game.GetImageUrl()" alt="@game.name" />
-                    </div>
+                <Draggable OnDragCallback="@TierBoxChanged" Data="@game" Tier="@tier">
+                        <GameElement game="@game" TierPosition="@TierPosition"></GameElement>
+                </Draggable>
                 }
             </div>
     </div>
@@ -26,14 +27,40 @@
     protected override void OnInitialized()
     {
         tier = StateManager.Tiers[TierPosition];
+        tier.TierRefreshDelegate = TierBoxChanged;
+    }
+
+    public void OnDragEnter(Game game)
+    {
+        var dragAndDropTier = dragAndDropService.TierData;
+        if (dragAndDropTier != null)
+        {
+            if (dragAndDropTier != tier)
+            {
+                StateManager.AddGameToTier(game, tier);
+                dragAndDropTier.Games.Remove(game);
+                dragAndDropTier.TierRefreshDelegate();
+                dragAndDropService.TierData = tier;
+            }
+        }
+        else
+        {
+            StateManager.AddGameToTier(game, tier);
+            StateManager.RemoveGameFromList(game);
+            StateManager.RefreshGamesList.Invoke();
+            dragAndDropService.TierData = tier;
+        }
     }
 
     void OnDrop(Game game)
     {
-        StateManager.AddGameToTier(game, tier, 0);
-
+        //StateManager.AddGameToTier(game, tier);
         // Important: Invoke StateHasChanged() to update the page
+        //StateHasChanged();
+    }
+
+    public void TierBoxChanged()
+    {
         StateHasChanged();
-        
     }
 }

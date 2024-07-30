@@ -59,7 +59,6 @@ h1:focus {
 
 .tier-box {
     border: 3px solid #ccc;
-    margin-bottom: 0.5%;
     border-color: black;
     background-color: black;
     text-align: left;
@@ -81,13 +80,26 @@ h1:focus {
     left: 103px;
     width: 94.4%;
     height: 100%;
-    text-align: center;
+    text-align: left;
     background-color: white;
+    display: flex;
+    flex-wrap: wrap;
 }
 
     .tier-games .game-item {
-        margin: 5px;
-        cursor: move;
+        margin-top: 1px;
+        margin-left: 1px;
+        flex: 0 0 auto;
+        width: 45px; /* Ширина элемента */
+        height: 45px; /* Высота элемента */
+        justify-content: center;
+        align-items: center;
+        box-sizing: border-box; /* Убедимся, что padding и border учитываются в размерах */
+    }
+
+    .tier-games .game-item img {
+        max-width: 45px;
+        max-height: 45px;
     }
 
 .game-list {

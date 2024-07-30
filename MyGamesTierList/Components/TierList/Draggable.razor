@@ -1,7 +1,11 @@
 ﻿@inject DragAndDropService DragAndDropService
+@inject IStateManager StateManager
+@rendermode InteractiveServer
+
 <div draggable="true" @ondragstart="@OnDragStart">
     @ChildContent
 </div>
+
 @code {
     [Parameter]
     public RenderFragment ChildContent { get; set; }
@@ -12,9 +16,16 @@
     [Parameter]
     public Game Data { get; set; }
 
+    [Parameter]
+    public Tier Tier { get; set; } = null;
+
+    [Parameter]
+    public Action OnDragCallback { get; set; }
+
     void OnDragStart()
     {
         // Notify the DragAndDropService what the current Data and Zone are.
-        DragAndDropService.StartDrag(Data, Zone);
+        DragAndDropService.StartDrag(Data, Zone, Tier);
+        OnDragCallback.Invoke();
     }
 }

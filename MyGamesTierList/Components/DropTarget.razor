@@ -1,6 +1,6 @@
 ﻿@inject DragAndDropService DragAndDropService
 
-<div ondragover="event.preventDefault()" @ondrop="@OnDrop">
+<div ondragover="event.preventDefault()" @ondrop="@OnDrop" @ondragenter="@OnDragEnter">
     @ChildContent
 </div>
 @code {
@@ -13,11 +13,22 @@
     [Parameter]
     public Action<Game> Drop { get; set; }
 
+    [Parameter]
+    public Action<Game> DragEnter { get; set; }
+
     void OnDrop()
     {
         if (Drop != null && DragAndDropService.Accepts(Zone))
         {
             Drop((Game)DragAndDropService.Data);
+        }
+    }
+
+    void OnDragEnter()
+    {
+        if (DragEnter != null)
+        {
+            DragEnter((Game)DragAndDropService.Data);
         }
     }
 }

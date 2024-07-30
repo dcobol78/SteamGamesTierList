@@ -1,7 +1,8 @@
-﻿<h3>GamesList</h3>
-@rendermode RenderMode.InteractiveServer
+﻿@rendermode RenderMode.InteractiveServer
 @inject IStateManager StateManager
+@inject DragAndDropService dragAndDropService
 
+<h3>GamesList</h3>
 <h2>Available Games</h2>
 <input type="text" style="color" @bind="search" placeholder="Search..." @oninput="OnSearchChanged" />
 <div class="game-filters">
@@ -23,17 +24,20 @@
     </label>
 </div>
 
-<div class="available-games">
-    @foreach (var game in StateManager.FiltredGames)
-    {
-        @if (!string.IsNullOrEmpty(game.img_icon_url))
+
+<DropTarget Drop="@OnDrop" DragEnter="@OnDragEnter">
+    <div class="available-games">
+        @foreach (var game in searchresult)
         {
-            <Draggable Data="@game">
-                <img class="game-item" src="@game.GetImageUrl()" alt="@game.name" />
-            </Draggable>
+            @if (!string.IsNullOrEmpty(game.img_icon_url))
+            {
+                <Draggable OnDragCallback="@OnFilterChanged" Data="@game">
+                    <img title="@game.name" class="game-item" src="@game.GetImageUrl()" alt="@game.name" />
+                </Draggable>
+            }
         }
-    }
-</div>
+    </div>
+</DropTarget>
 
 @code {
     private string search;
@@ -43,9 +47,33 @@
     private bool sortByPlayTime;
     private bool sortByName;
 
+    private List<Game> searchresult;
+
+    private int counter = 0;
+
+    public void OnDragEnter(Game game)
+    {
+        var tier = dragAndDropService.TierData;
+        if (tier != null)
+        {
+            tier.Games.Remove(game);
+            StateManager.AddGameToList(game);
+            OnFilterChanged();
+            tier.RefreshTear();
+            dragAndDropService.TierData = null;
+        }
+
+    }
+
+    public void OnDrop(Game game)
+    {
+        
+    }
+
     protected override void OnInitialized()
     {
-        StateManager.FilterResult();
+        StateManager.RefreshGamesList = OnFilterChanged;
+        searchresult = StateManager.GetFilteredResult();
         search = string.Empty;
         playedMoreThan = 0;
         showOnlyPlayed = false;
@@ -59,7 +87,7 @@
     {
         search = e.Value.ToString();
         StateManager.SaveFilterState(search, playedMoreThan, showOnlyPlayed, sortByLastPlayed, sortByPlayTime, sortByName);
-        StateManager.FilterResult();
+        searchresult = StateManager.GetFilteredResult();
     }
 
     private void OnCheckBoxChanged()
@@ -92,9 +120,10 @@
         OnFilterChanged();
     }
 
-    private void OnFilterChanged()
+    public void OnFilterChanged()
     {
         StateManager.SaveFilterState(search, playedMoreThan, showOnlyPlayed, sortByLastPlayed, sortByPlayTime, sortByName);
-        StateManager.FilterResult();
+        searchresult = StateManager.GetFilteredResult();
+        StateHasChanged();
     }
 }

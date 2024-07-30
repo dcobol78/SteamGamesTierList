@@ -7,13 +7,9 @@ namespace MyGamesTierList
 {
     public interface IStateManager
     {
-        public List<Game> AllGames { get; set; }
-
         public List<Tier> Tiers { get; set; }
 
-        public List<Game> FiltredGames { get; set; }
-
-        public List<Game> UsedGames { get; set; }
+        public List<Game> GameList { get; set; }
 
         public void RemoveTier(Tier tier);
 
@@ -22,6 +18,7 @@ namespace MyGamesTierList
         public void ChangeTier(Tier tier, string name, string color, int number);
 
         public void AddGameToTier(Game game, Tier tier, int position);
+        public void AddGameToTier(Game game, Tier tier);
 
         public void RemoveGameFromTier(Game game, Tier tier);
 
@@ -29,11 +26,17 @@ namespace MyGamesTierList
 
         public void SaveFilterState(string search, int playTime, bool showOnlyPlayed, bool sortByLastPlayed, bool sortByPlayTime, bool sortByName);
 
-        public void FilterResult();
+        public List<Game> GetFilteredResult();
 
         public FilterState Filter { get; set; }
 
         public void SetGames(string jsonString);
+
+        public void RemoveGameFromList(Game game);
+
+        public void AddGameToList(Game game);
+
+        public Action RefreshGamesList { get; set; }
     }
 
     public class StateManager : IStateManager
@@ -53,19 +56,20 @@ namespace MyGamesTierList
             };
 
             Filter = new();
-            UsedGames = new();
         }
+
+        public Action RefreshGamesList { get; set; }
 
         public void SetGames(string jsonString)
         {
             var rootobject = JsonConvert.DeserializeObject<Rootobject>(jsonString);
             AllGames = rootobject.response.games.ToList();
+            GameList = AllGames.ToList();
         }
 
         public List<Tier> Tiers { get; set;}
-        public List<Game> AllGames { get; set; }
-        public List<Game> FiltredGames { get; set; }
-        public List<Game> UsedGames { get; set; }
+        private List<Game> AllGames { get; set; }
+        public List<Game> GameList { get; set; }
         public FilterState Filter { get; set; }
 
         public void SaveFilterState(string search, int playTime, bool showOnlyPlayed, bool sortByLastPlayed, bool sortByPlayTime, bool sortByName)
@@ -80,11 +84,18 @@ namespace MyGamesTierList
 
         public void AddGameToTier(Game game, Tier tier, int position)
         {
-            tier.Games.Insert(position, game);
+            if (!tier.Games.Contains(game))
+            {
+                tier.Games.Insert(position, game);
+            }
+        }
 
-            bool niga = FiltredGames.Contains(game);
-
-            UsedGames.Add(game);
+        public void AddGameToTier(Game game, Tier tier)
+        {
+            if (!tier.Games.Contains(game))
+            {
+                tier.Games.Add(game);
+            }
         }
 
         public void AddTier()
@@ -106,9 +117,10 @@ namespace MyGamesTierList
 
         public void RemoveGameFromTier(Game game, Tier tier)
         {
-            tier.Games.Remove(game);
-
-            UsedGames.Remove(game);
+            if (Tiers.Contains(tier))
+            {
+                tier.Games.Remove(game);
+            }
 
         }
 
@@ -123,43 +135,60 @@ namespace MyGamesTierList
             tier.Games.Insert(position, game);
         }
 
-        public void FilterResult()
+        public void RemoveGameFromList(Game game)
         {
+            GameList.Remove(game);
+        }
+
+        public void AddGameToList(Game game)
+        {
+            if (!GameList.Contains(game))
+            {
+                GameList.Add(game);
+            }
+
+        }
+
+        public List<Game> GetFilteredResult()
+        {
+            List<Game> result;
             if (Filter.Search != null)
             {
                 if (Filter.PlayTime > 0 || Filter.ShowOnlyPlayed)
                 {
-                    FiltredGames = AllGames.Where(g => g.playtime_forever > Filter.PlayTime).Where(g => g.name.Contains(Filter.Search, StringComparison.OrdinalIgnoreCase)).Where(g => !UsedGames.Contains(g)).ToList();
+                    result = GameList.Where(g => g.playtime_forever > Filter.PlayTime).Where(g => g.name.Contains(Filter.Search, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
                 else
                 {
-                    FiltredGames = AllGames.Where(g => g.name.Contains(Filter.Search, StringComparison.OrdinalIgnoreCase)).Where(g => !UsedGames.Contains(g)).ToList();
+                    result = GameList.Where(g => g.name.Contains(Filter.Search, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
             }
             else
             {
                 if (Filter.PlayTime > 0 || Filter.ShowOnlyPlayed)
                 {
-                    FiltredGames = AllGames.Where(g => g.playtime_forever > Filter.PlayTime).Where(g => !UsedGames.Contains(g)).ToList();
+                    result = GameList.Where(g => g.playtime_forever > Filter.PlayTime).ToList();
                 }
                 else
                 {
-                    FiltredGames = AllGames.Where(g => !UsedGames.Contains(g)).ToList();
+                    result = GameList.ToList();
                 }
             }
 
             if (Filter.SortByLastPlayed)
             {
-                FiltredGames.Sort((emp2, emp1) => emp1.rtime_last_played.CompareTo(emp2.rtime_last_played));
+                result.Sort((emp2, emp1) => emp1.rtime_last_played.CompareTo(emp2.rtime_last_played));
             }
             else if (Filter.SortByPlayTime)
             {
-                FiltredGames.Sort((emp2, emp1) => emp1.playtime_forever.CompareTo(emp2.playtime_forever));
+                result.Sort((emp2, emp1) => emp1.playtime_forever.CompareTo(emp2.playtime_forever));
             }
             else if (Filter.SortByName)
             {
-                FiltredGames.Sort((emp1, emp2) => emp1.name.CompareTo(emp2.name));
+                result.Sort((emp1, emp2) => emp1.name.CompareTo(emp2.name));
             }
+
+            return result;
         }
     }
 
