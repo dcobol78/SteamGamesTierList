@@ -2,7 +2,9 @@
 @inject IStateManager StateManager
 @inject DragAndDropService dragAndDropService
 
-<img title="@game.name" class="game-item" src="@game.GetImageUrl()" alt="@game.name" />
+<DropTarget Drop="@OnDrop" DragEnter="@OnDragEnter">
+    <img title="@game.name" class="game-item" src="@game.GetImageUrl()" alt="@game.name" />
+</DropTarget>
 
 @code {
     [Parameter]
@@ -16,5 +18,24 @@
     protected override void OnInitialized()
     {
         tier = StateManager.Tiers[TierPosition];
+    }
+
+    public void OnDragEnter(Game game)
+    {
+        var dragAndDropTier = dragAndDropService.TierData;
+        if (dragAndDropTier != null)
+        {
+            if (dragAndDropTier == tier)
+            {
+                var pos = tier.Games.FindIndex(g => g == this.game);
+                StateManager.ReplaceGame(game, tier, pos);
+                tier.RefreshTear();
+            }
+        }
+    }
+
+    public void OnDrop(Game game)
+    {
+        
     }
 }

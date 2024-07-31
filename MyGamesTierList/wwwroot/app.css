@@ -1,4 +1,5 @@
 html, body {
+    height = 100%;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: white;
     background-color: #25261f;
@@ -58,37 +59,43 @@ h1:focus {
 }
 
 .tier-box {
-    border: 3px solid #ccc;
+    border: 2px solid #ccc;
     border-color: black;
     background-color: black;
-    text-align: left;
-    height: 100px;
+    height: auto;
+    min-height: 45px;
+    display: flex;
+    gap: 1px;
 }
 
 .tier-name {
-    width: 100px;
-    height: 100%;
-    text-align: center;
-    padding-top: 10px;
-    font-size: 300%;
+    display: flex;
+    width: auto;
+    height: auto;
+    min-width: 45px;
+    min-height: 45px;
+    font-size: 100%;
+    font-family: 'Comic Sans MS';
     color: black;
+    position: relative;
+    justify-content: center;
+    align-items: center;
 }
 
 .tier-games {
-    position: relative;
-    top: -94px;
-    left: 103px;
-    width: 94.4%;
+
+    width: 100%;
     height: 100%;
+    min-height: 45px;
     text-align: left;
     background-color: white;
     display: flex;
     flex-wrap: wrap;
+    position: relative;
 }
 
     .tier-games .game-item {
-        margin-top: 1px;
-        margin-left: 1px;
+
         flex: 0 0 auto;
         width: 45px; /* Ширина элемента */
         height: 45px; /* Высота элемента */
@@ -114,8 +121,8 @@ h1:focus {
 
 .available-games .game-item {
     flex: 0 0 auto;
-    width: 45px; /* Ширина элемента */
-    height: 45px; /* Высота элемента */
+    width: auto; /* Ширина элемента */
+    height: auto; /* Высота элемента */
     display: flex;
     justify-content: center;
     align-items: center;

@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
 @rendermode RenderMode.InteractiveServer
 
 
@@ -6,26 +8,56 @@
 @inject IStateManager StateManager
 @inject NavigationManager NavigationManager
     
-<input type="tel" @bind-value="SteamId"/>
-<button type="submit" @onclick="SubmitSteamId">Submit</button>
-<p>@SteamId</p>
+<div style="text-align:center; display: flex; justify-content: center; align-items: center; flex-wrap:wrap; height: 100%">
+    <h1>Steam URL</h1>
+    <input class="form-control" type="text" @bind-value="UserProfileLink" style=""/>
+    <button class="btn btn-primary" type="submit" @onclick="SubmitSteamId" style="margin-top: 3px">Search</button>
+</div>
+
 
 @code {
-    public string SteamApiKey = "F3222DCD3C449B826C6A2805C982CEB7"; // Научиться работать с ключами API
-    public string SteamId = "76561198188611981";
+    protected override void OnInitialized()
+    {
+        var config = new ConfigurationBuilder().
+        AddUserSecrets<Program>().
+        Build();
+        SteamApiKey = config["apikey"];
+    }
+    public string SteamApiKey; // Научиться работать с ключами API
+
+    public string UserProfileLink = "https://steamcommunity.com/id/DayJopu/";
+    public string ProfileLinkPattern = @"https:\/\/steamcommunity\.com\/id\/([^\/]+)\/?$";
+
+    public string SteamId;
 
     public async Task SubmitSteamId()
     {
-        var response = await httpClient.GetAsync($"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={SteamApiKey}&steamid={SteamId}&format=json&include_appinfo=true");
-        var contents = await response.Content.ReadAsStringAsync();
-        if (!string.IsNullOrEmpty(contents))
+        if (!string.IsNullOrEmpty(UserProfileLink)) // Сделать проверку правлиьности ссылки
         {
-            StateManager.SetGames(contents);
-            NavigationManager.NavigateTo("TierList");
-        }
-        else
-        {
+            Match match = Regex.Match(UserProfileLink, ProfileLinkPattern);
 
+            if (match.Success)
+            {
+                var userVanityUrlName = match.Groups[1].Value;
+
+                var getSteamIdResponse = await httpClient.GetAsync($"http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={SteamApiKey}&vanityurl={userVanityUrlName}");
+                var getSteamIdContent = await getSteamIdResponse.Content.ReadAsStringAsync();
+                
+                JObject json = JObject.Parse(getSteamIdContent);
+
+                SteamId = json["response"]["steamid"].ToString();
+
+                if (!string.IsNullOrEmpty(SteamId))
+                {
+                    var response = await httpClient.GetAsync($"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={SteamApiKey}&steamid={SteamId}&format=json&include_appinfo=true");
+                    var contents = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(contents))
+                    {
+                        StateManager.SetGames(contents);
+                        NavigationManager.NavigateTo("TierList");
+                    }
+                }
+            }
         }
     }
 }

@@ -37,6 +37,8 @@ namespace MyGamesTierList
         public void AddGameToList(Game game);
 
         public Action RefreshGamesList { get; set; }
+
+        public void Reset();
     }
 
     public class StateManager : IStateManager
@@ -52,7 +54,8 @@ namespace MyGamesTierList
                 new Tier("C", "#ffff7f", 3),
                 new Tier("D", "#bfff7f", 4),
                 new Tier("E", "#7fff7f", 5),
-                new Tier("F", "#7fffff", 6)
+                new Tier("F", "#7fffff", 6),
+                new Tier("Skip", "#ffffff", 6)
             };
 
             Filter = new();
@@ -147,6 +150,17 @@ namespace MyGamesTierList
                 GameList.Add(game);
             }
 
+        }
+
+        public void Reset()
+        {
+            foreach (var tier in Tiers)
+            {
+                tier.Games.Clear();
+                tier.RefreshTear();
+            }
+            GameList = AllGames.ToList();
+            RefreshGamesList.Invoke();
         }
 
         public List<Game> GetFilteredResult()
