@@ -23,29 +23,41 @@
         Build();
         SteamApiKey = config["apikey"];
     }
-    public string SteamApiKey; // Научиться работать с ключами API
+    string SteamApiKey; 
 
     public string UserProfileLink = "https://steamcommunity.com/id/DayJopu/";
-    public string ProfileLinkPattern = @"https:\/\/steamcommunity\.com\/id\/([^\/]+)\/?$";
 
-    public string SteamId;
+    string ProfileLinkPattern1 = @"https:\/\/steamcommunity\.com\/id\/([^\/]+)\/?$";
+    string ProfileLinkPattern2 = @"https:\/\/steamcommunity\.com\/profiles\/([^\/]+)\/?$";
+
+    string SteamId;
 
     public async Task SubmitSteamId()
     {
         if (!string.IsNullOrEmpty(UserProfileLink)) // Сделать проверку правлиьности ссылки
         {
-            Match match = Regex.Match(UserProfileLink, ProfileLinkPattern);
+            Match match1 = Regex.Match(UserProfileLink, ProfileLinkPattern1);
+            Match match2 = Regex.Match(UserProfileLink, ProfileLinkPattern2);
 
-            if (match.Success)
+            if (match1.Success  || match2.Success)
             {
-                var userVanityUrlName = match.Groups[1].Value;
+                string userVanityUrlName;
+                if (match1.Success)
+                {
+                    userVanityUrlName = match1.Groups[1].Value;
+                    var getSteamIdResponse = await httpClient.GetAsync($"http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={SteamApiKey}&vanityurl={userVanityUrlName}");
+                    var getSteamIdContent = await getSteamIdResponse.Content.ReadAsStringAsync();
 
-                var getSteamIdResponse = await httpClient.GetAsync($"http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={SteamApiKey}&vanityurl={userVanityUrlName}");
-                var getSteamIdContent = await getSteamIdResponse.Content.ReadAsStringAsync();
-                
-                JObject json = JObject.Parse(getSteamIdContent);
+                    JObject json = JObject.Parse(getSteamIdContent);
 
-                SteamId = json["response"]["steamid"].ToString();
+                    SteamId = json["response"]["steamid"].ToString();
+                }
+                else
+                {
+                    SteamId = match2.Groups[1].Value;
+                }
+
+
 
                 if (!string.IsNullOrEmpty(SteamId))
                 {
